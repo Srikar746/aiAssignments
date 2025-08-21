@@ -56,7 +56,7 @@ print("Rabbit Leap - BFS:")
 for state in bfs_rabbit():
     print(state)
 
-print("\nRabbit Leap - DFS:")
+print("\n  Leap - DFS:")
 for state in dfs_rabbit(initial_rabbit, [initial_rabbit], set()):
     print(state)
 
