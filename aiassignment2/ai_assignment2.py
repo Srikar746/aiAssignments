@@ -1,115 +1,123 @@
 import heapq
 import math
 
-# 8 directions (up, down, left, right + diagonals)
-directions = [(-1, -1), (-1, 0), (-1, 1),
-              (0, -1),          (0, 1),
-              (1, -1),  (1, 0), (1, 1)]
+# Directions for 8-directional movement (horizontally, vertically, and diagonally)
+directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
-# Heuristic function 
-def heuristic(x, y, goal):
-    return math.sqrt((x - goal[0]) ** 2 + (y - goal[1]) ** 2)
+# Helper function to calculate Euclidean distance heuristic
+def euclidean_distance(a, b):
+    return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
+# Helper function to calculate Manhattan distance heuristic
+def manhattan_distance(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-# Best First Search (Greedy)
-def best_first_search(grid):
+# Best First Search (Greedy Search) Algorithm
+def best_first_search(grid, heuristic):
     n = len(grid)
     start, goal = (0, 0), (n - 1, n - 1)
     
-    
-    if grid[0][0] == 1 or grid[n-1][n-1] == 1:
+    if grid[0][0] == 1 or grid[n - 1][n - 1] == 1:
         return -1, []
 
-    pq = []  
-    heapq.heappush(pq, (heuristic(0, 0, goal), start))
+    open_list = []
+    heapq.heappush(open_list, (heuristic(start, goal), start))
+    came_from = {}
     visited = set()
-    parent = {start: None}
-
-    while pq:
-        _, (x, y) = heapq.heappop(pq)
-
-        if (x, y) == goal:
-            
+    visited.add(start)
+    
+    while open_list:
+        _, current = heapq.heappop(open_list)
+        
+        if current == goal:
+            # Reconstruct path
             path = []
-            while (x, y) is not None:
-                path.append((x, y))
-                (x, y) = parent[(x, y)]
-            return len(path), path[::-1]
-
-        if (x, y) in visited:
-            continue
-        visited.add((x, y))
-
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < n and 0 <= ny < n and grid[nx][ny] == 0 and (nx, ny) not in visited:
-                parent[(nx, ny)] = (x, y)
-                heapq.heappush(pq, (heuristic(nx, ny, goal), (nx, ny)))
-
+            while current in came_from:
+                path.append(current)
+                current = came_from[current]
+            path.append(start)
+            path.reverse()
+            return len(path), path
+        
+        for direction in directions:
+            neighbor = (current[0] + direction[0], current[1] + direction[1])
+            if 0 <= neighbor[0] < n and 0 <= neighbor[1] < n and grid[neighbor[0]][neighbor[1]] == 0 and neighbor not in visited:
+                visited.add(neighbor)
+                came_from[neighbor] = current
+                heapq.heappush(open_list, (heuristic(neighbor, goal), neighbor))
+    
     return -1, []
 
-
-
-# A* Search
-
-def a_star_search(grid):
+# A* Search Algorithm
+def a_star_search(grid, heuristic):
     n = len(grid)
     start, goal = (0, 0), (n - 1, n - 1)
-
-    # If start or goal is blocked
-    if grid[0][0] == 1 or grid[n-1][n-1] == 1:
+    
+    if grid[0][0] == 1 or grid[n - 1][n - 1] == 1:
         return -1, []
 
-    pq = []  # priority queue
-    heapq.heappush(pq, (0 + heuristic(0, 0, goal), 0, start))  # (f, g, node)
-    parent = {start: None}
-    g_cost = {start: 0}
+    open_list = []
+    heapq.heappush(open_list, (0 + heuristic(start, goal), start))  # f = g + h
+    g_costs = {start: 0}
+    came_from = {}
+    visited = set()
+    visited.add(start)
 
-    while pq:
-        f, g, (x, y) = heapq.heappop(pq)
+    while open_list:
+        _, current = heapq.heappop(open_list)
 
-        if (x, y) == goal:
-            
+        if current == goal:
+            # Reconstruct path
             path = []
-            while (x, y) is not None:
-                path.append((x, y))
-                (x, y) = parent[(x, y)]
-            return len(path), path[::-1]
+            while current in came_from:
+                path.append(current)
+                current = came_from[current]
+            path.append(start)
+            path.reverse()
+            return len(path), path
 
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < n and 0 <= ny < n and grid[nx][ny] == 0:
-                new_g = g + 1
-                if (nx, ny) not in g_cost or new_g < g_cost[(nx, ny)]:
-                    g_cost[(nx, ny)] = new_g
-                    parent[(nx, ny)] = (x, y)
-                    f = new_g + heuristic(nx, ny, goal)
-                    heapq.heappush(pq, (f, new_g, (nx, ny)))
+        for direction in directions:
+            neighbor = (current[0] + direction[0], current[1] + direction[1])
+            if 0 <= neighbor[0] < n and 0 <= neighbor[1] < n and grid[neighbor[0]][neighbor[1]] == 0:
+                tentative_g_cost = g_costs[current] + 1
+                if neighbor not in g_costs or tentative_g_cost < g_costs[neighbor]:
+                    g_costs[neighbor] = tentative_g_cost
+                    f_cost = tentative_g_cost + heuristic(neighbor, goal)
+                    heapq.heappush(open_list, (f_cost, neighbor))
+                    came_from[neighbor] = current
 
     return -1, []
 
+# Main function to compare both algorithms
+def compare_algorithms(grid):
+    # Best First Search (Greedy Search)
+    print("Best First Search:")
+    path_length, path = best_first_search(grid, manhattan_distance)
+    if path_length == -1:
+        print("Path length: -1")
+    else:
+        print(f"Path length: {path_length}, Path: {path}")
+    
+    # A* Search
+    print("A* Search:")
+    path_length, path = a_star_search(grid, manhattan_distance)
+    if path_length == -1:
+        print("Path length: -1")
+    else:
+        print(f"Path length: {path_length}, Path: {path}")
 
+# Example usage
+grid1 = [[0, 1], [1, 0]]
+grid2 = [[0, 0, 0], [1, 1, 0], [1, 1, 0]]
+grid3 = [[1, 0, 0], [1, 1, 0], [1, 1, 0]]
 
-# Example Test Cases
+print("Example 1:")
+compare_algorithms(grid1)
 
-if __name__ == "__main__":
-    grids = [
-        [[0, 1],
-         [1, 0]],
+print("\nExample 2:")
+compare_algorithms(grid2)
 
-        [[0, 0, 0],
-         [1, 1, 0],
-         [1, 1, 0]],
+print("\nExample 3:")
+compare_algorithms(grid3)
 
-        [[1, 0, 0],
-         [1, 1, 0],
-         [1, 1, 0]]
-    ]
-
-    for i, grid in enumerate(grids, 1):
-        print(f"\nExample {i}:")
-        bf_len, bf_path = best_first_search(grid)
-        print(f"Best First Search  → Path length: {bf_len}, Path: {bf_path}")
-        a_len, a_path = a_star_search(grid)
-        print(f"A* Search          → Path length: {a_len}, Path: {a_path}")
 
