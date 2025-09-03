@@ -105,6 +105,7 @@ def compare_algorithms(grid):
         print("Path length: -1")
     else:
         print(f"Path length: {path_length}, Path: {path}")
+<<<<<<< HEAD
 
 # Example usage
 grid1 = [[0, 1], [1, 0]]
@@ -119,5 +120,23 @@ compare_algorithms(grid2)
 
 print("\nExample 3:")
 compare_algorithms(grid3)
+=======
+>>>>>>> 61c25c7 (commit)
 
+# Example usage
+grid1 = [[0, 1], [1, 0]]
+grid2 = [[0, 0, 0], [1, 1, 0], [1, 1, 0]]
+grid3 = [[1, 0, 0], [1, 1, 0], [1, 1, 0]]
 
+<<<<<<< HEAD
+=======
+print("Example 1:")
+compare_algorithms(grid1)
+
+print("\nExample 2:")
+compare_algorithms(grid2)
+
+print("\nExample 3:")
+compare_algorithms(grid3)
+
+>>>>>>> 61c25c7 (commit)
